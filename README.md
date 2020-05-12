@@ -30,7 +30,7 @@ chmod +x mysql_dict
 
 ## 使用说明
 
-请自行修改 `mysql_dict` 开始 `$config` 配置项：
+请自行修改 `mysql_dict.php` 文件中 `$config` 配置项：
 
 ```php
 $config = [
