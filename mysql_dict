@@ -1,16 +1,5 @@
+#!/usr/bin/env php
 <?php
-
-/**
- * 生成mysql数据字典
- */
-
-// 数据库配置
-$config = [
-    'host'     => '127.0.0.1',
-    'user'     => 'root',
-    'password' => 'root',
-    'charset'  => 'utf8mb4',
-];
 
 /**
  * export_dict : 生成字典文档
@@ -27,7 +16,7 @@ function export_dict($dbname, $config) {
     try {
         $con = new PDO($dsn, $config['user'], $config['password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
     } catch (PDOException $e) {
-        die('连接失败[Connection failed]: ' . $e->getMessage());
+        die(cliError('连接失败[Connection failed]: ' . $e->getMessage()));
     }
 
 
@@ -144,8 +133,73 @@ EOT;
     file_put_contents($dbname.'.html', $html_tplt);
 }
 
-$dbs = ['yascmf_app', 'test'];
-foreach ($dbs as $db) {
-    export_dict($db, $config);
+
+/**
+ * cli 中输出红色前景颜色文字
+ * 
+ * @param string $str
+ * @return string
+ */
+function cliError($str) {
+    return "\033[31m".$str."\033[0m".PHP_EOL;
 }
 
+/**
+ * 解析命令行参数
+ * 
+ * @param array $params
+ */
+function parseCliOptions($argv) {
+    $count = count($argv);
+    $config = [
+        'host' => '127.0.0.1',
+        'user' => 'root',
+        'password' => 'root',
+        'dbname' => '',
+        'charset' => 'utf8mb4'
+    ];
+    $whitelist = [
+        '-h=' => 'host',
+        '-u=' => 'user',
+        '-p=' => 'password',
+        '-d=' => 'dbname',
+        '-c=' => 'charset',
+    ];
+    for ($i = 1; $i < $count; $i ++) {
+        $opKey = substr($argv[$i], 0, 3);
+        if (in_array($opKey, array_keys($whitelist))) {
+            $opVal = str_replace($opKey, '', $argv[$i]);
+            $config[$whitelist[$opKey]] = $opVal;
+        }
+    }
+    return $config;
+}
+
+if (substr(php_sapi_name(), 0, 3) !== 'cli') {
+    die(cliError('只运行在PHP命令行模式下[Only run in PHP CLI mode]!'));
+}
+
+if ($argc < 2) {
+    $help = <<<TEXT
+参数错误，目前支持以下参数（带*为必传参数，未传递则使用默认值）：
+-h 指定MySQL主机名，默认 `127.0.0.1`
+-u 指定MySQL用户名，默认 `root`
+-p 指定MySQL用户密码，默认 `root`
+-d * 指定MySQL数据库名，多个库名请以英文逗号分隔
+-c 指定MySQL数据库字符集，默认 `utf8mb4`
+如：
+./mysql_dict -h=127.0.0.1 -u=root -p=root -d=test,yascmf_app -c=utf8mb4
+
+TEXT;
+    die($help);
+}
+
+$config = parseCliOptions($argv);
+$dbStr = isset($config['dbname']) ? $config['dbname'] : '';
+unset($config['dbname']);
+$dbs = explode(',', $dbStr);
+if (count($dbs) > 0) {
+    foreach ($dbs as $db) {
+        export_dict($db, $config);
+    }
+}
