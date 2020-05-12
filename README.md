@@ -37,7 +37,7 @@ $config = [
     'host'     => '127.0.0.1',
     'user'     => 'root',
     'password' => 'root',
-    'charset'  => 'utf8mb4',
+    'charset'  => 'utf8mb4',  # 如果导出的文档出现乱码 ？，请指定该数据库对应的字符集
 ];
 ```
 
