@@ -9,8 +9,11 @@
 依赖于 `PHP` 运行时，且需安装 `PDO` 扩展。
 
 ```bash
-# raw.githubusercontent.com 如果无法连接，可克隆或下载本项目
+# raw.githubusercontent.com 如果无法连接，可克隆本项目
 wget https://raw.githubusercontent.com/douyasi/db-dict/master/mysql_dict
+# 或者到项目 `release` 页面下载
+# or
+wget https://github.com/douyasi/db-dict/releases/download/1.0/mysql_dict
 chmod +x mysql_dict
 ./mysql_dict -h=127.0.0.1 -u=root -p=root -d=test,yascmf_app -c=utf8mb4
 ```
