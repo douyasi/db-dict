@@ -1,10 +1,10 @@
-# 数据库数据字典生成脚本 (Database Dictionary Generator)
+# MySQL 数据库数据字典生成脚本 (MySQL Database Dictionary Generator)
 
-> 本数据字典由PHP脚本自动导出,字典的备注来自数据库表及其字段的注释(`comment`).开发者在增改库表及其字段时,请在 `migration` 时写明注释,以备后来者查阅.
+> 本数据字典由PHP脚本自动导出，字典的备注来自数据库表及其字段的注释(`comment`)。开发者在增改库表及其字段时,请在 `migration` 时写明注释，以备后来者查阅。
 
 
 
-## 命令行版本使用说明
+### 命令行版本使用说明
 
 依赖于 `PHP` 运行时，且需安装 `PDO` 扩展。
 
@@ -31,7 +31,7 @@ chmod +x mysql_dict
 ```
 
 
-## 使用说明
+### 源码版本使用说明
 
 请自行修改 `mysql_dict.php` 文件中 `$config` 配置项：
 
@@ -53,16 +53,12 @@ foreach ($dbs as $db) {
 }
 ```
 
-## 导出预览
+### 导出格式
 
-支持生成 `markdown` 和 `html` 两种格式。
+支持导出 `markdown` 和 `html` 两种格式文件，HTML页面预览图如下：
 
-页面样式预览：
+![dict.png](https://douyasi.com/usr/uploads/2017/06/1954673305.png)
 
-![dict.png][1]
-
-  [1]: http://douyasi.com/usr/uploads/2017/06/1954673305.png
-
-## 授权协议
+### 授权协议
 
 MIT LICENSE
