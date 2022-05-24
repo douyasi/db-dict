@@ -2,7 +2,9 @@
 
 > 本数据字典由PHP脚本自动导出，字典的备注来自数据库表及其字段的注释 `comment` 。开发者在增改库表及其字段时，请在 `migration` 时写明注释，以备后来者查阅。
 
+### 衍生相关
 
+- [ddl-to-object](https://github.com/ycrao/ddl-to-object): 根据 DDL 语句生成各种语言支持的对象类。
 
 ### 命令行版本使用说明
 
