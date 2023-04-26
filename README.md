@@ -1,6 +1,8 @@
-# MySQL 数据库数据字典生成脚本 (MySQL Database Dictionary Generator)
+# MySQL 数据库数据字典导出器
 
-> 本数据字典由PHP脚本自动导出，字典的备注来自数据库表及其字段的注释 `comment` 。开发者在增改库表及其字段时，请在 `migration` 时写明注释，以备后来者查阅。
+[ENGLISH README](README-en.md)
+
+> MySQL 数据库字典（文档）是由 `PHP` 脚本自动导出的。在导出之前，您需要为数据库的表及其字段添加上注释。为数据库添加注释是一个（开发）好习惯。
 
 ### 衍生相关
 
@@ -8,30 +10,33 @@
 
 ### 命令行版本使用说明
 
-依赖于 `PHP` 运行时，且需安装 `PDO` 扩展。
+需要 [PHP](https://www.php.net/) 运行时和（安装） [PDO](https://www.php.net/manual/en/ref.pdo-mysql.php) 扩展。
 
 ```bash
-# raw.githubusercontent.com 如果无法连接，可克隆本项目
+# 如果 raw.githubusercontent.com 服务器无法连接连接上，可尝试科学上网并克隆本项目
 wget https://raw.githubusercontent.com/douyasi/db-dict/master/mysql_dict
 # 或者到项目 `release` 页面下载
-# or
-wget https://github.com/douyasi/db-dict/releases/download/1.0/mysql_dict
+# 当前最新版 1.1
+wget https://github.com/douyasi/db-dict/releases/download/1.1/mysql_dict
 chmod +x mysql_dict
-./mysql_dict -h=127.0.0.1 -u=root -p=root -d=test,yascmf_app -c=utf8mb4
+# 示例
+./mysql_dict -h=127.0.0.1 -u=root -p=root -d=test_app -c=utf8mb4
 ```
 
-目前支持以下参数（带*为必传参数，未传递则使用默认值）：
+目前支持以下参数（带*为必传参数，如未传递则使用默认值）：
 
 ```
--h 指定MySQL主机名，默认 `127.0.0.1`
--u 指定MySQL用户名，默认 `root`
--p 指定MySQL用户密码，默认 `root`
--d * 指定MySQL数据库名，多个库名请以英文逗号分隔
--c 指定MySQL数据库字符集，默认 `utf8mb4`
-如：
-./mysql_dict -h=127.0.0.1 -u=root -p=root -d=test,yascmf_app -c=utf8mb4
-```
+-h : MySQL服务主机名或 IP ，默认 `127.0.0.1`
+-u : 登录的用户（名），默认 `root`
+-p : 连接到服务器时使用的用户密码，默认 `root`
+-d*: 指定要导出的数据库名称，多个名称之间用（英文）逗号分隔
+-c : 数据库的字符集，默认 `utf8mb4`
+-l : 导出文档的地区语言
+     如果不被支持，则设置成默认 `en`
 
+示例：
+./mysql_dict -h=127.0.0.1 -u=root -p=root -d=test_app -c=utf8mb4
+```
 
 ### 源码版本使用说明
 
@@ -43,19 +48,21 @@ $config = [
     'user'     => 'root',
     'password' => 'root',
     'charset'  => 'utf8mb4',  # 如果导出的文档出现乱码 ？，请指定该数据库对应的字符集
+    'locale'   => 'zh-CN',  # 文档语言，目前仅支持简体中文（zh-CN）与英文（en）
 ];
 ```
 
 导出时，请指定需要生成字典的数据库名：
 
 ```php
+# 使用你自己的数据库（名）
 $dbs = ['yascmf_app', 'test'];
 foreach ($dbs as $db) {
     export_dict($db, $config);
 }
 ```
 
-### 导出格式
+### 导出的文件格式
 
 支持导出 `markdown` 和 `html` 两种格式文件，HTML页面预览图如下：
 
@@ -64,3 +71,7 @@ foreach ($dbs as $db) {
 ### 授权协议
 
 MIT LICENSE
+
+### 特别致谢
+
+![JetBrains Logo (Main) logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
