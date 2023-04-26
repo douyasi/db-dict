@@ -242,7 +242,6 @@ TEXT;
 }
 
 $config = parseCliOptions($argv);
-var_dump($config);
 $dbStr = isset($config['dbname']) ? $config['dbname'] : '';
 unset($config['dbname']);
 $dbs = explode(',', $dbStr);
