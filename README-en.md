@@ -42,7 +42,7 @@ $config = [
     'host'     => '127.0.0.1',
     'user'     => 'root',
     'password' => 'root',
-    'charset'  => 'utf8mb4',  # if 
+    'charset'  => 'utf8mb4',
 ];
 ```
 
