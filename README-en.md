@@ -43,6 +43,7 @@ $config = [
     'user'     => 'root',
     'password' => 'root',
     'charset'  => 'utf8mb4',
+    'locale'   => 'zh-CN',  # locale language, now only support Simplified Chinese(zh-CN) and English(en)
 ];
 ```
 
