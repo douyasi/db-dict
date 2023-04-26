@@ -1,44 +1,64 @@
 <?php
 
-/**
- * 生成mysql数据字典
- */
-
-// 数据库配置
-$config = [
-    'host'     => '127.0.0.1',
-    'user'     => 'root',
-    'password' => 'root',
-    'charset'  => 'utf8mb4',
+$i18n = [
+    // default, en-US,en-GB
+    'en' => [
+        'name' => 'Database Dictionary',
+        'description' => 'Exported by a PHP [script](https://github.com/douyasi/db-dict). You need make comments for database\'s tables and their fields before export. Comments for database(s) is a good habit.',
+        'table_headers' => '|  Field  |  DataType  |  Default  |  Nullable  |  AutoIncr  |  Comment  |',
+    ],
+    // zh-CN
+    'zh-CN' => [
+        'name' => '数据库字典',
+        'description' => '本数据库词典由 `PHP` [脚本](https://github.com/douyasi/db-dict) 导出的。在导出之前，您需要为数据库的表及其字段添加上注释。为数据库（表列）添加注释是一个好习惯。',
+        'table_headers' => '|  字段名  |  数据类型  |  默认值  |  允许非空  |  自动递增  |  备注  |',
+    ],
 ];
 
+if (!function_exists('str_starts_with')) {
+    function str_starts_with($haystack, $needle) {
+        return (string)$needle !== '' && strncmp($haystack, $needle, strlen($needle)) === 0;
+    }
+}
+
 /**
- * export_dict : 生成字典文档
+ * export_dict
  *
- * @param string $dbname 数据库名
- * @param array $config 数据库配置
+ * @param string $dbname
+ * @param array $config
  * @return void
  */
-function export_dict($dbname, $config) {
-    $title = $dbname.' 数据字典';
+function export_dict($dbname, $config, &$i18n) {
     $charset = isset($config['charset']) ? $config['charset'] : 'utf8mb4';
+    $locale = isset($config['locale']) ? $config['locale'] : 'en';
+    if (str_starts_with('zh', $locale)) {
+        // set zh-* (such as zh-TW/zh-HK) to zh-CN
+        $locale = 'zh-CN';
+    }
+    if (str_starts_with('en', $locale)) {
+        // set en-* (such as en-GB/en-US) to en
+        $locale = 'en';
+    }
+    if (!in_array($locale, array_keys($i18n))) {
+        // not supported, set to default en
+        $locale = 'en';
+    }
+    $title = $dbname.' '.$i18n[$locale]['name'];
     $dsn = 'mysql:dbname='.$dbname.';host='.$config['host'].';charset='.$charset;
-    // 数据库连接
     try {
         $con = new PDO($dsn, $config['user'], $config['password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
     } catch (PDOException $e) {
         die('连接失败[Connection failed]: ' . $e->getMessage());
     }
 
-
     $tables = $con->query('SHOW tables')->fetchAll(PDO::FETCH_COLUMN);
 
-    // 取得所有的表名
+    // fetch all tables
     foreach ($tables as $table) {
         $_tables[]['TABLE_NAME'] = $table;
     }
 
-    // 循环取得所有表的备注及表中列消息
+    // fetch all comments for table(s) and their fields by loop
     foreach ($_tables as $k => $v) {
         $sql = 'SELECT * FROM ';
         $sql .= 'INFORMATION_SCHEMA.TABLES ';
@@ -58,46 +78,47 @@ function export_dict($dbname, $config) {
             $fields[] = $fr;
         }
         $_tables[$k]['COLUMN'] = $fields;
-    }  
+    }
     unset($con);
 
     $mark = '';
 
-    // 循环所有表  
+    // loop all tables
     foreach ($_tables as $k => $v) {
 
-        $mark .= '## '.$v['TABLE_NAME'].'  '.$v['TABLE_COMMENT'].PHP_EOL;
-        $mark .= ''.PHP_EOL;
-        $mark .= '|  字段名  |  数据类型  |  默认值  |  允许非空  |  自动递增  |  备注  |'.PHP_EOL;
+        $mark .= '### '.$v['TABLE_NAME'].'  '.$v['TABLE_COMMENT'].PHP_EOL;
+        $mark .= ' '.PHP_EOL;
+        $mark .= $i18n[$locale]['table_headers'].PHP_EOL;
         $mark .= '| ------ | ------ | ------ | ------ | ------ | ------ |'.PHP_EOL;
         foreach ($v['COLUMN'] as $f) {
-            $mark .= '| '.$f['COLUMN_NAME'].' | '.$f['COLUMN_TYPE'].' | '.$f['COLUMN_DEFAULT'].' | '.$f['IS_NULLABLE'].' | '.($f['EXTRA'] == 'auto_increment' ? '是' : '').' | '.(empty($f['COLUMN_COMMENT']) ? '-' : str_replace('|', '/', $f['COLUMN_COMMENT'])).' |'.PHP_EOL;
+            $mark .= '| '.$f['COLUMN_NAME'].' | '.$f['COLUMN_TYPE'].' | '.$f['COLUMN_DEFAULT'].' | '.$f['IS_NULLABLE'].' | '.($f['EXTRA'] == 'auto_increment' ? 'YES' : '').' | '.(empty($f['COLUMN_COMMENT']) ? '-' : str_replace('|', '/', $f['COLUMN_COMMENT'])).' |'.PHP_EOL;
         }
-        $mark .= ''.PHP_EOL;
+        $mark .= ' '.PHP_EOL;
 
     }
 
-    // markdown输出
+    $description = $i18n[$locale]['description'];
+    // markdown output
     $md_tplt = <<<EOT
-# {$title}
->   本数据字典由PHP脚本自动导出,字典的备注来自数据库表及其字段的注释(`comment`).开发者在增改库表及其字段时,请在 `migration` 时写明注释,以备后来者查阅.
-
+## {$title}
+>   {$description}
 {$mark}
 EOT;
 
-    // html输出
+    // html output
     $marked_text = htmlentities($md_tplt);
     $html_tplt = <<<EOT
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="{$locale}">
 <head>
     <meta charset="UTF-8">
     <title>{$title} - Powered By Markdown Viewer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="stylesheet" type="text/css" href="http://s1.ystatic.cn/41345695beaa9b2e/css/github-markdown.css">
-    <script src="http://s1.ystatic.cn/lib/marked/marked.js"></script>
-    <script src="http://s1.ystatic.cn/lib/highlight.js/highlight.pack.js?v=9.6.0"></script>
-    <link href="http://s1.ystatic.cn/lib/highlight.js/styles/github.css?v=9.6.0" rel="stylesheet">
+    <meta name="author" content="https://github.com/douyasi/db-dict">
+    <link rel="stylesheet" type="text/css" href="https://raoyc.com/markdoc-viewer/css/github-markdown-light.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.2.12/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css" rel="stylesheet" />
 </head>
 <body>
 <div class="markdown-body" id="content" style="margin:auto; width: 1024px;">
@@ -109,32 +130,34 @@ EOT;
 <script>
 var marked_text = document.getElementById('marked_text').innerText;
 var renderer = new marked.Renderer();
-renderer.table = function(header, body) {
-    return '<table class="table table-bordered table-striped">\\n'
-            + '<thead>\\n'
-            + header
-            + '</thead>\\n'
-            + '<tbody>\\n'
-            + body
-            + '</tbody>\\n'
-            + '</table>\\n';
+renderer.table = function (header, body) {
+    return (
+      '<table class="table table-bordered table-striped">\\n' +
+      '<thead>\\n' +
+      header +
+      '</thead>\\n' +
+      '<tbody>\\n' +
+      body +
+      '</tbody>\\n' +
+      '</table>\\n'
+    );
 };
+// see: https://marked.js.org/using_advanced#options
 marked.setOptions({
     renderer: renderer,
     gfm: true,
-    tables: true,
     breaks: false,
     pedantic: false,
-    sanitize: true,
+    // sanitize: false, // deprecated
     smartLists: true,
     smartypants: false,
-    langPrefix: 'language-',
-    //这里使用了highlight对代码进行高亮显示
+    langPrefix: "language-",
+    // need highlight.js
     highlight: function (code) {
         return hljs.highlightAuto(code).value;
-    }
+    },
 });
-document.getElementById('content').innerHTML = marked(marked_text);
+document.getElementById('content').innerHTML = marked.parse(marked_text);
   </script>
 </body>
 </html>
@@ -144,8 +167,17 @@ EOT;
     file_put_contents($dbname.'.html', $html_tplt);
 }
 
+// config
+$config = [
+    'host'     => '127.0.0.1',
+    'user'     => 'root',
+    'password' => 'A123#456b',
+    'charset'  => 'utf8mb4',
+    'locale'   => 'zh',
+];
+# two databases: yascmf_app, test
 $dbs = ['yascmf_app', 'test'];
 foreach ($dbs as $db) {
-    export_dict($db, $config);
+    export_dict($db, $config, $i18n);
 }
 
